@@ -5,12 +5,11 @@ import com.aliyun.ocr_api20210707.Client;
 import com.aliyun.ocr_api20210707.models.RecognizeAdvancedRequest;
 import com.aliyun.ocr_api20210707.models.RecognizeAdvancedResponse;
 import com.aliyun.tea.TeaException;
-import com.aliyun.teaopenapi.models.Config;
 import com.aliyun.teautil.models.RuntimeOptions;
+import plugin.pojo.Config;
 import plugin.pojo.OCRDataInfo;
 
 import static plugin.App.logger;
-import static plugin.utils.ConfigUtil.config;
 
 public class OCRUtil {
     private static Client client;
@@ -18,14 +17,15 @@ public class OCRUtil {
 
     static {
         //读取密钥
-        String accessKeyId = config.get("accessKeyId");
-        String accessKeySecret = config.get("accessKeySecret");
+        Config pluginConfig = ConfigUtil.getConfig();
+        String accessKeyId = pluginConfig.getAccessKeyId();
+        String accessKeySecret = pluginConfig.getAccessKeySecret();
         if (accessKeySecret == null || accessKeyId == null) {
             isSupported = false;
             logger.warning("未检测到阿里云OCR配置信息，图片文字识别将不可用。");
         } else {
             isSupported = true;
-            Config config = new Config()
+            com.aliyun.teaopenapi.models.Config config = new com.aliyun.teaopenapi.models.Config()
                     .setAccessKeyId(accessKeyId)
                     .setAccessKeySecret(accessKeySecret);
             config.endpoint = "ocr-api.cn-hangzhou.aliyuncs.com";

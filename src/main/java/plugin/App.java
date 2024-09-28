@@ -7,11 +7,11 @@ import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.utils.MiraiLogger;
 import plugin.listener.UserMessageListener;
+import plugin.pojo.Config;
 import plugin.utils.ConfigUtil;
 
 import java.io.IOException;
 
-import static plugin.utils.ConfigUtil.config;
 
 
 public final class App extends JavaPlugin {
@@ -33,10 +33,12 @@ public final class App extends JavaPlugin {
         try {
             logger = getLogger();
             ConfigUtil.load();
-            owner = config.get("owner").substring(1);
-            bot = config.get("bot").substring(1);
+            Thread.sleep(1500);
+            Config config = ConfigUtil.getConfig();
+            owner = config.getOwner().substring(1);
+            bot = config.getBot().substring(1);
 
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException | InterruptedException e) {
             throw new RuntimeException(e);
         }
         getLogger().info("ChatAI-InGroup-v2 loaded!");

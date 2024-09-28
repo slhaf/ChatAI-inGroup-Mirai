@@ -8,18 +8,21 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.At;
 import org.jetbrains.annotations.NotNull;
 import plugin.constant.ChatConstant;
+import plugin.pojo.Config;
 import plugin.utils.AIUtil;
+import plugin.utils.ConfigUtil;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static plugin.App.logger;
-import static plugin.utils.ConfigUtil.config;
 
 /**
  * @author SLHAF
  */
 public class UserMessageListener extends SimpleListenerHost {
+
+    private static final Config config = ConfigUtil.getConfig();
 
     public enum Methods {
 
@@ -72,7 +75,7 @@ public class UserMessageListener extends SimpleListenerHost {
         }
         Methods method = Methods.NONE;
 
-        if (content.contains(ChatConstant.CHANGE_MODEL) && !id.equals(config.get(ChatConstant.OWNER).substring(1))) {
+        if (content.contains(ChatConstant.CHANGE_MODEL) && !id.equals(config.getOwner().substring(1))) {
             event.getGroup().sendMessage(new At(Long.parseLong(id)).plus("没有权限！"));
             return;
         }
@@ -124,7 +127,7 @@ public class UserMessageListener extends SimpleListenerHost {
         Methods method = Methods.NORMAL;
 
 
-        if (content.contains(ChatConstant.CHANGE_MODEL) && !id.equals(config.get(ChatConstant.OWNER).substring(1))) {
+        if (content.contains(ChatConstant.CHANGE_MODEL) && !id.equals(config.getOwner().substring(1))) {
             event.getFriend().sendMessage("没有权限！");
             return;
         }

@@ -8,21 +8,21 @@ import com.zhipu.oapi.service.v4.model.ChatMessageRole;
 import com.zhipu.oapi.service.v4.model.ModelApiResponse;
 import plugin.constant.AIConstant;
 import plugin.constant.ChatConstant;
+import plugin.pojo.Config;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import static plugin.App.logger;
-import static plugin.utils.ConfigUtil.config;
 
 /**
  * @author SLHAF
  */
 public class AIUtil {
-    private static final String apikey;
-    private static final ClientV4 client;
-    private static final String requestIdTemplate = "ChatAI_InGroup_v2";
+    private static final String APIKEY;
+    private static final ClientV4 CLIENT;
+    private static final String REQUEST_ID_TEMPLATE = "ChatAI_InGroup_v2";
     private static final HashMap<Long, List<ChatMessage>> userMessagesNormal = new HashMap<>();
     private static final HashMap<Long, Long> userLatestTimeNormal = new HashMap<>();
     private static String modelNormal;
@@ -31,19 +31,20 @@ public class AIUtil {
     private static final HashMap<Long, Long> userLatestTimeCode = new HashMap<>();
     private static String modelCode;
 
-    private static final Long checkTime, timeout;
+    private static final Long CHECK_TIME, TIMEOUT;
 
     static {
-        apikey = config.get("apikey");
-        client = new ClientV4.Builder(apikey).build();
-        modelNormal = config.get("model_normal");
-        modelCode = config.get("model_code");
-        checkTime = Long.valueOf(ConfigUtil.config.get("time_check").substring(1));
-        timeout = Long.valueOf(config.get("timeout").substring(1));
+        Config config = ConfigUtil.getConfig();
+        APIKEY = config.getApikey();
+        CLIENT = new ClientV4.Builder(APIKEY).build();
+        modelNormal = config.getModelNormal();
+        modelCode = config.getModelCode();
+        CHECK_TIME = Long.valueOf(config.getTimeCheck().substring(1));
+        TIMEOUT = Long.valueOf(config.getTimeout().substring(1));
         new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(checkTime);
+                    Thread.sleep(CHECK_TIME);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -53,7 +54,7 @@ public class AIUtil {
                         //查看user最近时间，如果超过30min，则清理对应记录
                         userLatestTimeNormal.forEach((id, latestTime) -> {
                             Long currentTime = System.currentTimeMillis();
-                            if (currentTime - latestTime > timeout && userMessagesNormal.containsKey(id)) {
+                            if (currentTime - latestTime > TIMEOUT && userMessagesNormal.containsKey(id)) {
                                 userMessagesNormal.remove(id);
                                 logger.info("Normal记录清理:" + id);
                             }
@@ -154,7 +155,7 @@ public class AIUtil {
                 }
             }
         }
-        String requestId = String.format(requestIdTemplate, System.currentTimeMillis());
+        String requestId = String.format(REQUEST_ID_TEMPLATE, System.currentTimeMillis());
         List<ChatMessage> messages = new ArrayList<>();
         messages.add(new ChatMessage(ChatMessageRole.USER.value(), content));
         ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
@@ -164,7 +165,7 @@ public class AIUtil {
                 .messages(messages)
                 .requestId(requestId)
                 .build();
-        ModelApiResponse invokeModelApiResp = client.invokeModelApi(chatCompletionRequest);
+        ModelApiResponse invokeModelApiResp = CLIENT.invokeModelApi(chatCompletionRequest);
         int code = invokeModelApiResp.getCode();
         if (code == 200) {
             printTokenInfo(invokeModelApiResp);
@@ -181,7 +182,7 @@ public class AIUtil {
     private static String getChatResponse(Long id, String content, String url,String model, HashMap<Long, List<ChatMessage>> userMessages, HashMap<Long, Long> userLatestTime) {
         userLatestTime.put(id, System.currentTimeMillis());
 
-        String requestId = String.format(requestIdTemplate, System.currentTimeMillis());
+        String requestId = String.format(REQUEST_ID_TEMPLATE, System.currentTimeMillis());
         //处理url内容
         String result = "";
         if(url != null){
@@ -213,7 +214,7 @@ public class AIUtil {
                 .requestId(requestId)
                 .build();
 
-        ModelApiResponse invokeModelApiResp = client.invokeModelApi(chatCompletionRequest);
+        ModelApiResponse invokeModelApiResp = CLIENT.invokeModelApi(chatCompletionRequest);
         int code = invokeModelApiResp.getCode();
         if (code == 200) {
             printTokenInfo(invokeModelApiResp);
