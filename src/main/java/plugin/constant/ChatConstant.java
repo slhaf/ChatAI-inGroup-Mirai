@@ -23,12 +23,14 @@ public class ChatConstant {
     /**
      * 普通对话标志
      */
-    public static final String NORMAL_MESSAGE_START = "@";
+    public static final String DEFAULT_MESSAGE_START = "@";
 
     /**
-     * code对话标志
+     * 分隔符（空格）
      */
-    public static final String CODE_MESSAGE_START = "/c ";
+    public static final String BLANK = " ";
+
+    public static final String SET = "/set ";
 
     /**
      * 切换模型
@@ -44,4 +46,9 @@ public class ChatConstant {
      * 清理消息
      */
     public static final String CLEAR = "clear";
+
+    /**
+     * 当前模型
+     */
+    public static final String CURRENT_MODEL = "当前模型";
 }

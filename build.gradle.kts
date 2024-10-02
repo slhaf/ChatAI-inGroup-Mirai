@@ -16,6 +16,8 @@ dependencies{
     implementation("cn.bigmodel.openapi:oapi-java-sdk:release-V4-2.0.2")
     implementation ("com.aliyun:ocr_api20210707:3.1.1")
     implementation ("junit:junit:4.13.2")
+    implementation ("org.apache.logging.log4j:log4j-core:2.23.1")
+    implementation ("org.apache.logging.log4j:log4j-api:2.23.1")
 
 }
 

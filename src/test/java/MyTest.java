@@ -10,8 +10,13 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
+import plugin.App;
+import plugin.utils.AIUtil;
+import plugin.utils.ConfigUtil;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -131,5 +136,16 @@ public class MyTest {
         }
         response.close();
         client.close();
+    }
+
+    @Test
+    public void mainTest() throws ClassNotFoundException, IOException {
+        ConfigUtil.load();
+
+        Long id = 2998813882L;
+        String content = "hello";
+        String chatCommand = "/c ";
+        String s = AIUtil.customChat(id, content, null, chatCommand);
+        System.out.println(s);
     }
 }

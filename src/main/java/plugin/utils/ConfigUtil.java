@@ -1,23 +1,27 @@
 package plugin.utils;
 
 import cn.hutool.core.bean.BeanUtil;
-import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import net.mamoe.mirai.utils.LoggerAdapters;
+import net.mamoe.mirai.utils.MiraiLogger;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import plugin.constant.ConfigConstant;
 import plugin.pojo.Config;
 
 import java.io.*;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
-import static plugin.App.logger;
 
 /**
  * @author SLHAF
  */
+@Slf4j
 public class ConfigUtil {
     private static final String CONFIG_PATH = "./config/ChatAIinGroup/config.yaml";
     private static final Yaml yaml;
     private static Config config;
+    public static MiraiLogger logger = LoggerAdapters.asMiraiLogger(log);
 
     private ConfigUtil() {
     }
@@ -45,14 +49,14 @@ public class ConfigUtil {
             config.setAccessKeyId("your_ali_access_key_id");
             config.setAccessKeySecret("your_ali_access_key_secret");
             config.setOwner("your_bot_owner_qq_number(e.g. Q1145141919810)");
-            config.setModelNormal("glm-4-flash");
-            config.setModelCode("glm-4-flash");
+            config.setDefaultModel("glm-4-flash");
             config.setBot("your_bot_qq_number(e.g. Q1145141919810)");
             config.setTimeout("M3600000");
             config.setTimeCheck("M60000");
-            HashMap<String, String> commands = new HashMap<>();
-            commands.put("/c ", "你是一位智能编程助手，你会为用户回答关于编程、代码、计算机方面的任何问题，并提供格式规范、可以执行、准确安全的代码，并在必要时提供详细的解释。 请用中文回答。");
-            commands.put("/example", "预设内容");
+            LinkedHashMap<String, String> commands = new LinkedHashMap<>();
+            commands.put("default","glm-4-flash|null");
+            commands.put("/c ", "glm-4-flash|你是一位智能编程助手，你会为用户回答关于编程、代码、计算机方面的任何问题，并提供格式规范、可以执行、准确安全的代码，并在必要时提供详细的解释。 请用中文回答。");
+            commands.put("/example ", "模型名称|预设内容");
             config.setCustomCommands(commands);
             dump();
             logger.warning("配置文件创建成功，请关闭后进行配置");
@@ -78,18 +82,19 @@ public class ConfigUtil {
      *
      * @param modelName 模型名称
      */
-    public static void modelNormalChange(String modelName) {
+    public static void defaultModelChange(String modelName) {
         try {
-            config.setModelNormal(modelName);
+            config.setDefaultModel(modelName);
             dump();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void modelCodeChange(String modelName) {
+    public static void customModelChange(String command,String modelName) {
         try {
-            config.setModelCode(modelName);
+            String customContent = config.getCustomCommands().get(command).split(ConfigConstant.CUSTOM_SPLIT)[1];
+            config.getCustomCommands().put(command,modelName+ConfigConstant.CUSTOM_SPLIT+customContent);
             dump();
         } catch (IOException e) {
             throw new RuntimeException(e);

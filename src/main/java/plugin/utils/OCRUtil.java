@@ -9,7 +9,8 @@ import com.aliyun.teautil.models.RuntimeOptions;
 import plugin.pojo.Config;
 import plugin.pojo.OCRDataInfo;
 
-import static plugin.App.logger;
+import static plugin.utils.ConfigUtil.logger;
+
 
 public class OCRUtil {
     private static Client client;

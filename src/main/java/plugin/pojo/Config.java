@@ -1,6 +1,7 @@
 package plugin.pojo;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Config {
     /**
@@ -18,8 +19,7 @@ public class Config {
      * 基础配置
      */
     private String owner;
-    private String modelNormal;
-    private String modelCode;
+    private String defaultModel;
     private String bot;
     private String timeout;
     private String timeCheck;
@@ -27,18 +27,17 @@ public class Config {
     /**
      * 自定义预设
      */
-    private HashMap<String,String> customCommands;
+    private LinkedHashMap<String,String> customCommands;
 
     public Config() {
     }
 
-    public Config(String apikey, String accessKeyId, String accessKeySecret, String owner, String modelNormal, String modelCode, String bot, String timeout, String timeCheck, HashMap<String, String> customCommands) {
+    public Config(String apikey, String accessKeyId, String accessKeySecret, String owner, String defaultModel, String bot, String timeout, String timeCheck, LinkedHashMap<String, String> customCommands) {
         this.apikey = apikey;
         this.accessKeyId = accessKeyId;
         this.accessKeySecret = accessKeySecret;
         this.owner = owner;
-        this.modelNormal = modelNormal;
-        this.modelCode = modelCode;
+        this.defaultModel = defaultModel;
         this.bot = bot;
         this.timeout = timeout;
         this.timeCheck = timeCheck;
@@ -113,32 +112,16 @@ public class Config {
      * 获取
      * @return modelNormal
      */
-    public String getModelNormal() {
-        return modelNormal;
+    public String getDefaultModel() {
+        return defaultModel;
     }
 
     /**
      * 设置
-     * @param modelNormal
+     * @param defaultModel
      */
-    public void setModelNormal(String modelNormal) {
-        this.modelNormal = modelNormal;
-    }
-
-    /**
-     * 获取
-     * @return modelCode
-     */
-    public String getModelCode() {
-        return modelCode;
-    }
-
-    /**
-     * 设置
-     * @param modelCode
-     */
-    public void setModelCode(String modelCode) {
-        this.modelCode = modelCode;
+    public void setDefaultModel(String defaultModel) {
+        this.defaultModel = defaultModel;
     }
 
     /**
@@ -201,12 +184,12 @@ public class Config {
      * 设置
      * @param customCommands
      */
-    public void setCustomCommands(HashMap<String, String> customCommands) {
+    public void setCustomCommands(LinkedHashMap<String, String> customCommands) {
         this.customCommands = customCommands;
     }
 
     @Override
     public String toString() {
-        return "Config{apikey = " + apikey + ", accessKeyId = " + accessKeyId + ", accessKeySecret = " + accessKeySecret + ", owner = " + owner + ", modelNormal = " + modelNormal + ", modelCode = " + modelCode + ", bot = " + bot + ", timeout = " + timeout + ", timeCheck = " + timeCheck + ", customCommands = " + customCommands + "}";
+        return "Config{apikey = " + apikey + ", accessKeyId = " + accessKeyId + ", accessKeySecret = " + accessKeySecret + ", owner = " + owner + ", modelNormal = " + defaultModel + ", modelCode = " +  ", bot = " + bot + ", timeout = " + timeout + ", timeCheck = " + timeCheck + ", customCommands = " + customCommands + "}";
     }
 }
