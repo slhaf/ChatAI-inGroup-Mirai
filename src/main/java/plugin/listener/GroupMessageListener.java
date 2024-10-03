@@ -23,8 +23,6 @@ import static plugin.utils.ConfigUtil.logger;
  */
 public class GroupMessageListener extends SimpleListenerHost {
 
-    private static final Config config = ConfigUtil.getConfig();
-
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
         super.handleException(context, exception);
@@ -37,6 +35,7 @@ public class GroupMessageListener extends SimpleListenerHost {
      */
     @EventHandler
     public void groupMessageHandler(GroupMessageEvent event) {
+        Config config = ConfigUtil.getConfig();
         //处理消息
         String id = String.valueOf(event.getSender().getId());
         String content = event.getMessage().contentToString();

@@ -5,7 +5,6 @@ import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.utils.MiraiLogger;
 import plugin.constant.ChatConstant;
 import plugin.listener.FriendMessageListener;
 import plugin.listener.GroupMessageListener;
@@ -15,12 +14,11 @@ import plugin.utils.ConfigUtil;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 
 public final class App extends JavaPlugin {
     public static final App INSTANCE = new App();
-    private String owner, bot;
-    private static HashMap<String,String> customCommands;
 
     private App() {
         super(new JvmPluginDescriptionBuilder("com.plugin.chatAI-InGroup-v2", "0.1.0")
@@ -32,6 +30,9 @@ public final class App extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        String owner, bot;
+        HashMap<String, String> customCommands;
+        List<Long> blacklist;
         //加载配置
         try {
             ConfigUtil.load();
@@ -40,7 +41,7 @@ public final class App extends JavaPlugin {
             owner = config.getOwner().substring(1);
             bot = config.getBot().substring(1);
             customCommands = config.getCustomCommands();
-
+            blacklist = config.getBlacklist();
         } catch (IOException | ClassNotFoundException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -51,16 +52,17 @@ public final class App extends JavaPlugin {
         GlobalEventChannel.INSTANCE.filterIsInstance(GroupMessageEvent.class)
                 .filter(event -> {
                     String msg = event.getMessage().contentToString();
-                    return (msg.startsWith(".") && msg.length() != 1) || msg.startsWith("@"+bot) || customCommands.containsKey(msg.split(" ")[0]);
+                    long groupId = event.getGroup().getId();
+                    return ((msg.startsWith(".") && msg.length() != 1) || msg.startsWith("@" + bot) || customCommands.containsKey(msg.split(" ")[0])) && !blacklist.contains(groupId);
                 }).registerListenerHost(new GroupMessageListener());
 
         //所有者监听
         GlobalEventChannel.INSTANCE.filterIsInstance(GroupMessageEvent.class)
-                        .filter(event -> {
-                            String msg = event.getMessage().contentToString();
-                            String sender = String.valueOf(event.getSender().getId());
-                            return msg.startsWith(ChatConstant.SET) && sender.equals(owner);
-                        }).registerListenerHost(new OwnerMessageListener());
+                .filter(event -> {
+                    String msg = event.getMessage().contentToString();
+                    String sender = String.valueOf(event.getSender().getId());
+                    return msg.startsWith(ChatConstant.SET) && sender.equals(owner);
+                }).registerListenerHost(new OwnerMessageListener());
 
         //私聊监听器
         GlobalEventChannel.INSTANCE.filterIsInstance(FriendMessageEvent.class)

@@ -30,7 +30,7 @@ public class ChatConstant {
      */
     public static final String BLANK = " ";
 
-    public static final String SET = "/set ";
+    public static final String SET = "$ ";
 
     /**
      * 切换模型

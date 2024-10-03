@@ -1,5 +1,6 @@
 package plugin.utils;
 
+import cn.hutool.core.map.MapUtil;
 import com.zhipu.oapi.ClientV4;
 import com.zhipu.oapi.Constants;
 import com.zhipu.oapi.service.v4.model.ChatCompletionRequest;
@@ -9,13 +10,14 @@ import com.zhipu.oapi.service.v4.model.ModelApiResponse;
 import plugin.constant.AIConstant;
 import plugin.constant.ChatConstant;
 import plugin.constant.ConfigConstant;
-import plugin.constant.MethodsConstant;
 import plugin.pojo.Config;
+import plugin.pojo.UserCustomLatestTime;
 import plugin.pojo.UserCustomMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import static plugin.utils.ConfigUtil.logger;
 
@@ -32,7 +34,7 @@ public class AIUtil {
     private static String defaultModel;
 
     private static final HashMap<Long, List<UserCustomMessage>> userCustomMessages = new HashMap<>();
-    private static final HashMap<Long, Long> userLatestTimeOfCustom = new HashMap<>();
+    private static final HashMap<Long, List<UserCustomLatestTime>> userLatestTimeOfCustom = new HashMap<>();
     /*private static String modelCode;*/
     /**
      * 结构:
@@ -59,7 +61,7 @@ public class AIUtil {
                 }
 
                 if (!userLatestTimeOfDefault.isEmpty()) {
-                    //查看user最近时间，如果超过30min，则清理对应记录
+                    //查看user最近时间，如果超过TIMEOUT，则清理对应记录
                     userLatestTimeOfDefault.forEach((id, latestTime) -> {
                         synchronized (userDefaultMessages.get(id)) {
                             Long currentTime = System.currentTimeMillis();
@@ -73,13 +75,21 @@ public class AIUtil {
 
 
                 if (!userLatestTimeOfCustom.isEmpty()) {
-                    //查看user最近时间，如果超过30min，则清理对应记录
-                    userLatestTimeOfCustom.forEach((id, latestTime) -> {
+                    //查看user最近时间，如果超过TIMEOUT，则清理对应记录
+                    userLatestTimeOfCustom.forEach((id, userCustomLatestTimeList) -> {
                         synchronized (userCustomMessages.get(id)) {
+                            ArrayList<Integer> indexToRemove = new ArrayList<>();
                             Long currentTime = System.currentTimeMillis();
-                            if (currentTime - latestTime > 30 * 60 * 1000 && userCustomMessages.containsKey(id)) {
-                                userCustomMessages.remove(id);
-                                logger.info("custom记录清理:" + id);
+                            for (int i = 0; i < userCustomLatestTimeList.size(); i++) {
+                                if (currentTime - userCustomLatestTimeList.get(i).getLatestTime() > TIMEOUT){
+                                    logger.info("custom记录清理: "+id+" "+userCustomLatestTimeList.get(i).getChatCommand());
+                                    userCustomMessages.get(id).remove(i);
+                                    indexToRemove.add(i);
+                                }
+                            }
+                            //移除最近操作时间
+                            for (int i : indexToRemove) {
+                                userCustomLatestTimeList.remove(i);
                             }
                         }
                     });
@@ -96,14 +106,16 @@ public class AIUtil {
 
     public static String customChat(Long id, String content, String url, String chatCommand) {
         if (ChatConstant.CLEAR.equals(content.replace(ChatConstant.BLANK, ""))) {
-            userCustomMessages.remove(id);
+            if (!userCustomMessages.containsKey(id)) {
+                return "不存在消息记录";
+            }
+            for (UserCustomMessage userCustomMessage : userCustomMessages.get(id)) {
+                if (userCustomMessage.getCommand().equals(chatCommand)) {
+                    userCustomMessage.getMessages().clear();
+                }
+            }
             return "消息记录已清空";
-        } /*else if (content.replace(ChatConstant.BLANK, "").startsWith(ChatConstant.CHANGE_MODEL)) {
-            content = content.replace(ChatConstant.BLANK, "");
-            modelCode = content.substring(4);
-            ConfigUtil.modelCodeChange(modelCode);
-            return "聊天模型切换为: " + modelCode;
-        } */ else if (AIConstant.CURRENT_MODEL.equals(content.replace(ChatConstant.BLANK, ""))) {
+        } else if (AIConstant.CURRENT_MODEL.equals(content.replace(ChatConstant.BLANK, ""))) {
             String modelName = customCommands.get(chatCommand).split(ConfigConstant.CUSTOM_SPLIT)[0];
             return "当前模型为: " + modelName;
         }
@@ -121,15 +133,18 @@ public class AIUtil {
         }
         String modelName = customCommands.get(chatCommand).split(ConfigConstant.CUSTOM_SPLIT)[0];
         synchronized (userCustomMessages.get(id)) {
-            return getChatResponse(id, content, url, modelName, userLatestTimeOfCustom, chatCommand);
+            return getChatResponse(id, content, url, modelName, chatCommand);
         }
     }
 
     public static String defaultChat(Long id, String content, String url) {
         if (ChatConstant.CLEAR.equals(content.replace(ChatConstant.BLANK, ""))) {
+            if (!userDefaultMessages.containsKey(id)) {
+                return "不存在消息记录";
+            }
             userDefaultMessages.remove(id);
             return "消息记录已清空";
-        }else if (ChatConstant.CURRENT_MODEL.equals(content.replace(ChatConstant.BLANK, ""))) {
+        } else if (ChatConstant.CURRENT_MODEL.equals(content.replace(ChatConstant.BLANK, ""))) {
             return "当前模型为: " + defaultModel;
         }
         //查看本次id是否有记录存在
@@ -143,7 +158,7 @@ public class AIUtil {
             userDefaultMessages.put(id, chatMessages);
         }
         synchronized (userDefaultMessages.get(id)) {
-            return getChatResponse(id, content, url, defaultModel, userLatestTimeOfDefault, null);
+            return getChatResponse(id, content, url, defaultModel, null);
         }
     }
 
@@ -167,7 +182,7 @@ public class AIUtil {
                 }
             }
         }
-        String requestId = REQUEST_ID_TEMPLATE + "_once_"+System.currentTimeMillis();
+        String requestId = REQUEST_ID_TEMPLATE + "_once_" + System.currentTimeMillis();
         List<ChatMessage> messages = new ArrayList<>();
         messages.add(new ChatMessage(ChatMessageRole.USER.value(), content));
         ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
@@ -179,7 +194,7 @@ public class AIUtil {
                 .build();
         ModelApiResponse invokeModelApiResp = CLIENT.invokeModelApi(chatCompletionRequest);
         int code = invokeModelApiResp.getCode();
-        if (code == 200) {
+        if (code == AIConstant.NORMAL_CODE) {
             printTokenInfo(invokeModelApiResp);
             return invokeModelApiResp.getData().getChoices().get(0).getMessage().getContent().toString();
         } else {
@@ -209,14 +224,11 @@ public class AIUtil {
      *                       <br>   qq1 : [{command1,[msg1.msg2,msg3]},{command2,[msg1,msg2,msg3]},{command3,[msg1,msg2,msg3]}]
      *                       <br>   qq2 : [{command1,[msg1.msg2,msg3]},{command2,[msg1,msg2,msg3]},{command3,[msg1,msg2,msg3]}]
      *                       <br></code>
-     * @param userLatestTime 最近操作时间
-     * @param chatCommand
+     * @param chatCommand 聊天指令
      * @return 得到的模型响应内容
      */
-    private static String getChatResponse(Long id, String content, String url, String model, HashMap<Long, Long> userLatestTime, String chatCommand) {
-        userLatestTime.put(id, System.currentTimeMillis());
-
-        String requestId = REQUEST_ID_TEMPLATE + "_"+ model + "_" + System.currentTimeMillis();
+    private static String getChatResponse(Long id, String content, String url, String model, String chatCommand) {
+        String requestId = REQUEST_ID_TEMPLATE + "_" + model + "_" + System.currentTimeMillis();
         //处理url内容
         String result = "";
         if (url != null) {
@@ -236,10 +248,11 @@ public class AIUtil {
         }
         logger.info("final content:" + content);
 
-        //根据primaryUserMessages中的内容来定义userMessages
+        //根据primaryUserMessages中的内容来定义userMessages并更新latestTime
         List<ChatMessage> chatMessages = null;
         if (chatCommand == null) {
             chatMessages = userDefaultMessages.get(id);
+            userLatestTimeOfDefault.put(id, System.currentTimeMillis());
         } else {
             List<UserCustomMessage> userCustomMessageList = userCustomMessages.get(id);
             for (UserCustomMessage userCustomMessage : userCustomMessageList) {
@@ -248,6 +261,28 @@ public class AIUtil {
                     chatMessages = userCustomMessage.getMessages();
                     break;
                 }
+            }
+            //更新最新操作时间
+            boolean found = false;
+            List<UserCustomLatestTime> userCustomLatestTimeList;
+            if (userLatestTimeOfCustom.containsKey(id)) {
+                //如果存在该id对应的任一聊天记录
+                userCustomLatestTimeList = userLatestTimeOfCustom.get(id);
+                for (UserCustomLatestTime userCustomLatestTime : userCustomLatestTimeList) {
+                    if (userCustomLatestTime.getChatCommand().equals(chatCommand)) {
+                        userCustomLatestTime.setLatestTime(System.currentTimeMillis());
+                        found = true;
+                        break;
+                    }
+                }
+            }else {
+                //如果没有记录存在
+                userCustomLatestTimeList = new ArrayList<>();
+                userCustomLatestTimeList.add(new UserCustomLatestTime(chatCommand,System.currentTimeMillis()));
+                userLatestTimeOfCustom.put(id,userCustomLatestTimeList);
+            }
+            if (!found) {
+                userCustomLatestTimeList.add(new UserCustomLatestTime(chatCommand, System.currentTimeMillis()));
             }
         }
 
@@ -264,12 +299,11 @@ public class AIUtil {
                 .stream(Boolean.FALSE)
                 .invokeMethod(Constants.invokeMethod)
                 .messages(chatMessages)
-                .requestId(requestId)
-                .build();
+                .requestId(requestId).build();
 
         ModelApiResponse invokeModelApiResp = CLIENT.invokeModelApi(chatCompletionRequest);
         int code = invokeModelApiResp.getCode();
-        if (code == 200) {
+        if (code == AIConstant.NORMAL_CODE) {
             printTokenInfo(invokeModelApiResp);
             String response = invokeModelApiResp.getData().getChoices().get(0).getMessage().getContent().toString();
             chatMessages.add(new ChatMessage(ChatMessageRole.ASSISTANT.value(), response));
@@ -291,4 +325,20 @@ public class AIUtil {
         logger.info("total_tokens: " + totalTokens);
     }
 
+    /**
+     * 清空所有聊天记录
+     */
+    public static String clearAll() {
+        int size = 0;
+        size += userDefaultMessages.size();
+        userDefaultMessages.clear();
+        userLatestTimeOfDefault.clear();
+
+        for (Long id : userCustomMessages.keySet()) {
+            size += userCustomMessages.get(id).size();
+        }
+        userCustomMessages.clear();
+        userLatestTimeOfCustom.clear();
+        return "本次清空" + size + "条会话";
+    }
 }

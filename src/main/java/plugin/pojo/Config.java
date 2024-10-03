@@ -2,6 +2,7 @@ package plugin.pojo;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 public class Config {
     /**
@@ -23,6 +24,7 @@ public class Config {
     private String bot;
     private String timeout;
     private String timeCheck;
+    private List<Long> blacklist;
 
     /**
      * 自定义预设
@@ -41,6 +43,19 @@ public class Config {
         this.bot = bot;
         this.timeout = timeout;
         this.timeCheck = timeCheck;
+        this.customCommands = customCommands;
+    }
+
+    public Config(String apikey, String accessKeyId, String accessKeySecret, String owner, String defaultModel, String bot, String timeout, String timeCheck, List<Long> blacklist, LinkedHashMap<String, String> customCommands) {
+        this.apikey = apikey;
+        this.accessKeyId = accessKeyId;
+        this.accessKeySecret = accessKeySecret;
+        this.owner = owner;
+        this.defaultModel = defaultModel;
+        this.bot = bot;
+        this.timeout = timeout;
+        this.timeCheck = timeCheck;
+        this.blacklist = blacklist;
         this.customCommands = customCommands;
     }
 
@@ -191,5 +206,21 @@ public class Config {
     @Override
     public String toString() {
         return "Config{apikey = " + apikey + ", accessKeyId = " + accessKeyId + ", accessKeySecret = " + accessKeySecret + ", owner = " + owner + ", modelNormal = " + defaultModel + ", modelCode = " +  ", bot = " + bot + ", timeout = " + timeout + ", timeCheck = " + timeCheck + ", customCommands = " + customCommands + "}";
+    }
+
+    /**
+     * 获取
+     * @return blacklist
+     */
+    public List<Long> getBlacklist() {
+        return blacklist;
+    }
+
+    /**
+     * 设置
+     * @param blacklist
+     */
+    public void setBlacklist(List<Long> blacklist) {
+        this.blacklist = blacklist;
     }
 }

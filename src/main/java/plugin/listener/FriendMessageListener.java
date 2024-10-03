@@ -12,16 +12,18 @@ import plugin.utils.ConfigUtil;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * @author SLHAF
+ */
 public class FriendMessageListener extends SimpleListenerHost {
-
-    private static final Config config = ConfigUtil.getConfig();
 
     @EventHandler
     public void friendMessageHandler(FriendMessageEvent event) {
-        /*String id = String.valueOf(event.getFriend().getId());
+        String id = String.valueOf(event.getFriend().getId());
         String content = event.getMessage().contentToString();
         String miraiCode = event.getMessage().serializeToMiraiCode();
         String url = null;
+        String chatCommand = null;
         if (miraiCode.matches(ChatConstant.MATCH_MESSAGE)) {
             String regex = ChatConstant.MATCH_IMAGE;
             Pattern pattern = Pattern.compile(regex);
@@ -37,16 +39,11 @@ public class FriendMessageListener extends SimpleListenerHost {
         }
         MethodsConstant method = MethodsConstant.NORMAL;
 
-
-        if (content.contains(ChatConstant.CHANGE_MODEL) && !id.equals(config.getOwner().substring(1))) {
-            event.getFriend().sendMessage("没有权限！");
-            return;
-        }
-
         //处理消息头
-        if (content.startsWith(ChatConstant.CODE_MESSAGE_START)) {
+        if (ConfigUtil.getConfig().getCustomCommands().containsKey(content.split(ChatConstant.BLANK)[0])) {
             content = content.substring(3);
             method = MethodsConstant.CUSTOM;
+            chatCommand = content.split(ChatConstant.BLANK)[0];
         } else if (content.startsWith(ChatConstant.ONCE_MESSAGE_START)) {
             content = content.substring(1);
             method = MethodsConstant.ONCE;
@@ -58,6 +55,6 @@ public class FriendMessageListener extends SimpleListenerHost {
             case NORMAL -> AIUtil.defaultChat(Long.valueOf(id), content, url);
             default -> "ERROR!";
         };
-        event.getFriend().sendMessage(response);*/
+        event.getFriend().sendMessage(response);
     }
 }

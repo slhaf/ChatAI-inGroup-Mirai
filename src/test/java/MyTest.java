@@ -10,7 +10,9 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
-import plugin.App;
+import plugin.constant.ChatConstant;
+import plugin.constant.ConfigConstant;
+import plugin.listener.OwnerMessageListener;
 import plugin.utils.AIUtil;
 import plugin.utils.ConfigUtil;
 
@@ -19,6 +21,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static kotlin.io.ConsoleKt.readln;
 
 public class MyTest {
     public static void www(String[] args) {
@@ -139,13 +143,44 @@ public class MyTest {
     }
 
     @Test
-    public void mainTest() throws ClassNotFoundException, IOException {
+    public void ownerTest() throws ClassNotFoundException, IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
         ConfigUtil.load();
 
-        Long id = 2998813882L;
-        String content = "hello";
+        Class clazz = OwnerMessageListener.class;
+        Method handleCommand = clazz.getDeclaredMethod("handleCommand", String.class, String.class);
+        handleCommand.setAccessible(true);
+        while (true){
+            String input = readln();
+            String command = input.split(ChatConstant.BLANK)[0];
+            String arguments = input.split(ChatConstant.BLANK)[1];
+
+            Object invoke = handleCommand.invoke(clazz.getDeclaredConstructor().newInstance(), command, arguments);
+            System.out.println(invoke);
+        }
+
+    }
+
+    @Test
+    public void chatTest() throws IOException, ClassNotFoundException {
+        ConfigUtil.load();
+
+        Long id = 1L;
+        String content = "你好";
         String chatCommand = "/c ";
-        String s = AIUtil.customChat(id, content, null, chatCommand);
-        System.out.println(s);
+
+        String customChat = AIUtil.customChat(id, content, null, chatCommand);
+        System.out.println(customChat);
+
+        String defaultChat = AIUtil.defaultChat(id, content, null);
+        System.out.println(defaultChat);
+
+        String chatOnce = AIUtil.chatOnce(content, null);
+        System.out.println(chatOnce);
+    }
+
+    @Test
+    public void regexTest(){
+        String str = "/c glm";
+        System.out.println(str.matches(ConfigConstant.MODEL_CHANGE));
     }
 }

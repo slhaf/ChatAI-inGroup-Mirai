@@ -14,4 +14,5 @@ public class AIConstant {
      * 错误结果
      */
     public static final String ERROR = "ERROR";
+    public static final int NORMAL_CODE = 200;
 }
