@@ -5,7 +5,6 @@ import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.FriendMessageEvent;
 import plugin.constant.ChatConstant;
 import plugin.constant.MethodsConstant;
-import plugin.pojo.Config;
 import plugin.utils.AIUtil;
 import plugin.utils.ConfigUtil;
 
@@ -40,10 +39,11 @@ public class FriendMessageListener extends SimpleListenerHost {
         MethodsConstant method = MethodsConstant.NORMAL;
 
         //处理消息头
-        if (ConfigUtil.getConfig().getCustomCommands().containsKey(content.split(ChatConstant.BLANK)[0])) {
-            content = content.substring(3);
+        if (ConfigUtil.getConfig().getCustomCommands().containsKey(content.split(ChatConstant.BLANK)[0]+ChatConstant.BLANK)) {
+            String[] split = content.split(ChatConstant.BLANK);
+            chatCommand = split[0] + ChatConstant.BLANK;
             method = MethodsConstant.CUSTOM;
-            chatCommand = content.split(ChatConstant.BLANK)[0];
+            content = split[1];
         } else if (content.startsWith(ChatConstant.ONCE_MESSAGE_START)) {
             content = content.substring(1);
             method = MethodsConstant.ONCE;

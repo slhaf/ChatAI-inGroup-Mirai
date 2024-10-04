@@ -1,6 +1,5 @@
 package plugin.utils;
 
-import cn.hutool.core.map.MapUtil;
 import com.zhipu.oapi.ClientV4;
 import com.zhipu.oapi.Constants;
 import com.zhipu.oapi.service.v4.model.ChatCompletionRequest;
@@ -17,7 +16,6 @@ import plugin.pojo.UserCustomMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 import static plugin.utils.ConfigUtil.logger;
 
@@ -121,6 +119,7 @@ public class AIUtil {
         }
         //查看本次id是否有记录存在
         if (!userCustomMessages.containsKey(id)) {
+            //不存在消息记录
             //创建消息list
             List<ChatMessage> chatMessages = new ArrayList<>();
             if (!customCommands.get(chatCommand).split(ConfigConstant.CUSTOM_SPLIT)[1].equals(ConfigConstant.NULL)) {
@@ -130,6 +129,29 @@ public class AIUtil {
             List<UserCustomMessage> userCustomMessageList = new ArrayList<>();
             userCustomMessageList.add(new UserCustomMessage(chatCommand, chatMessages));
             userCustomMessages.put(id, userCustomMessageList);
+        }else {
+            //存在消息记录，但需要判断是否存在该指令对应的消息记录
+            List<UserCustomMessage> userCustomMessageList = userCustomMessages.get(id);
+            boolean found = false;
+            for (UserCustomMessage userCustomMessage : userCustomMessageList) {
+                if (userCustomMessage.getCommand().equals(chatCommand)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                //如果不存在该指令对应的消息记录
+                UserCustomMessage userCustomMessage = new UserCustomMessage();
+                userCustomMessage.setCommand(chatCommand);
+                List<ChatMessage> chatMessages = new ArrayList<>();
+                //判断是否存在预设
+                if (!customCommands.get(chatCommand).split(ConfigConstant.CUSTOM_SPLIT)[1].equals(ConfigConstant.NULL)){
+                    ChatMessage customMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(), customCommands.get(chatCommand).split(ConfigConstant.CUSTOM_SPLIT)[1]);
+                    chatMessages.add(customMessage);
+                }
+                userCustomMessage.setMessages(chatMessages);
+                userCustomMessageList.add(userCustomMessage);
+            }
         }
         String modelName = customCommands.get(chatCommand).split(ConfigConstant.CUSTOM_SPLIT)[0];
         synchronized (userCustomMessages.get(id)) {
@@ -263,7 +285,7 @@ public class AIUtil {
                 }
             }
             //更新最新操作时间
-            boolean found = false;
+            boolean foundTime = false;
             List<UserCustomLatestTime> userCustomLatestTimeList;
             if (userLatestTimeOfCustom.containsKey(id)) {
                 //如果存在该id对应的任一聊天记录
@@ -271,7 +293,7 @@ public class AIUtil {
                 for (UserCustomLatestTime userCustomLatestTime : userCustomLatestTimeList) {
                     if (userCustomLatestTime.getChatCommand().equals(chatCommand)) {
                         userCustomLatestTime.setLatestTime(System.currentTimeMillis());
-                        found = true;
+                        foundTime = true;
                         break;
                     }
                 }
@@ -280,8 +302,9 @@ public class AIUtil {
                 userCustomLatestTimeList = new ArrayList<>();
                 userCustomLatestTimeList.add(new UserCustomLatestTime(chatCommand,System.currentTimeMillis()));
                 userLatestTimeOfCustom.put(id,userCustomLatestTimeList);
+                foundTime = true;
             }
-            if (!found) {
+            if (!foundTime) {
                 userCustomLatestTimeList.add(new UserCustomLatestTime(chatCommand, System.currentTimeMillis()));
             }
         }

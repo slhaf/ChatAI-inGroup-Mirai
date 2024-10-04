@@ -17,6 +17,9 @@ import java.util.HashMap;
 import java.util.List;
 
 
+/**
+ * @author SLHAF
+ */
 public final class App extends JavaPlugin {
     public static final App INSTANCE = new App();
 
@@ -47,16 +50,15 @@ public final class App extends JavaPlugin {
         }
         getLogger().info("ChatAI-InGroup-v2 loaded!");
 
-
         //群聊监听器
         GlobalEventChannel.INSTANCE.filterIsInstance(GroupMessageEvent.class)
                 .filter(event -> {
                     String msg = event.getMessage().contentToString();
                     long groupId = event.getGroup().getId();
-                    return ((msg.startsWith(".") && msg.length() != 1) || msg.startsWith("@" + bot) || customCommands.containsKey(msg.split(" ")[0])) && !blacklist.contains(groupId);
+                    return ((msg.startsWith(".") && msg.length() != 1) || msg.startsWith("@" + bot) || customCommands.containsKey(msg.split(" ")[0] + ChatConstant.BLANK)) && !blacklist.contains(groupId);
                 }).registerListenerHost(new GroupMessageListener());
 
-        //所有者监听
+        //所有者监听--群聊
         GlobalEventChannel.INSTANCE.filterIsInstance(GroupMessageEvent.class)
                 .filter(event -> {
                     String msg = event.getMessage().contentToString();
@@ -66,8 +68,20 @@ public final class App extends JavaPlugin {
 
         //私聊监听器
         GlobalEventChannel.INSTANCE.filterIsInstance(FriendMessageEvent.class)
-                .filter(event -> true)
+                .filter(event -> {
+                    String msg = event.getMessage().contentToString();
+                    String sender = String.valueOf(event.getFriend().getId());
+                    return !(msg.startsWith(ChatConstant.SET)&&sender.equals(owner));
+                })
                 .registerListenerHost(new FriendMessageListener());
+
+        //所有者监听--私聊
+        GlobalEventChannel.INSTANCE.filterIsInstance(FriendMessageEvent.class)
+                .filter(event -> {
+                    String msg = event.getMessage().contentToString();
+                    String sender = String.valueOf(event.getFriend().getId());
+                    return msg.startsWith(ChatConstant.SET) && sender.equals(owner);
+                }).registerListenerHost(new OwnerMessageListener());
 
     }
 

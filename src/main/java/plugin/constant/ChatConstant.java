@@ -33,16 +33,6 @@ public class ChatConstant {
     public static final String SET = "$ ";
 
     /**
-     * 切换模型
-     */
-    public static final String CHANGE_MODEL = "切换模型";
-
-    /**
-     * 所有者
-     */
-    public static final String OWNER = "owner";
-
-    /**
      * 清理消息
      */
     public static final String CLEAR = "clear";
@@ -51,4 +41,5 @@ public class ChatConstant {
      * 当前模型
      */
     public static final String CURRENT_MODEL = "当前模型";
+    public static final String SPLIT = "|";
 }

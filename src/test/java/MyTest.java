@@ -1,5 +1,8 @@
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
+import net.mamoe.mirai.console.plugin.PluginManager;
+import net.mamoe.mirai.console.terminal.MiraiConsoleImplementationTerminal;
+import net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -10,6 +13,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
+import plugin.App;
 import plugin.constant.ChatConstant;
 import plugin.constant.ConfigConstant;
 import plugin.listener.OwnerMessageListener;
@@ -19,29 +23,10 @@ import plugin.utils.ConfigUtil;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static kotlin.io.ConsoleKt.readln;
 
 public class MyTest {
-    public static void www(String[] args) {
-        String miraiCode = "看下这个题目[mirai:image:https://multimedia.nt.qq.com.cn/download?appid=1407&fileid=CgoyOTk4ODEzODgyEhQW4G7W3v2lT-NKItOqORRIbuK6rxiZzgcg_woo4u2zytCqiANQgL2jAQ&spec=0&rkey=CAMSKMa3OFokB_Tlf6uVSrtr8zFEBtyDtGIdmuztQCnfO9gIDN19LUsLquI]";
-        String url = null;
-        if (miraiCode.matches(".*[mirai:image:(https?://[\\w./?&amp;=]+)].*")) {
-            String regex = "\\[mirai:image:(.*?)]";
-            Pattern pattern = Pattern.compile(regex);
-
-            // 创建Matcher对象
-            Matcher matcher = pattern.matcher(miraiCode);
-
-            // 查找并提取链接
-            if (matcher.find()) {
-                url = matcher.group(1); // 提取第一个括号内的内容
-            }
-        }
-        System.out.println(url);
-    }
 
     @Test
     public void sseTest() throws IOException {
@@ -182,5 +167,13 @@ public class MyTest {
     public void regexTest(){
         String str = "/c glm";
         System.out.println(str.matches(ConfigConstant.MODEL_CHANGE));
+    }
+
+    @Test
+    public void terminalTest() throws InterruptedException {
+        MiraiConsoleTerminalLoader.INSTANCE.startAsDaemon(new MiraiConsoleImplementationTerminal());
+        PluginManager.INSTANCE.loadPlugin(App.INSTANCE);
+        PluginManager.INSTANCE.enablePlugin(App.INSTANCE);
+        while (true);
     }
 }

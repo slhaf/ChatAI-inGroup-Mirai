@@ -53,4 +53,5 @@ public class UserCustomMessage {
     public String toString() {
         return "UserCustomMessage{command = " + command + ", messages = " + messages + "}";
     }
+
 }

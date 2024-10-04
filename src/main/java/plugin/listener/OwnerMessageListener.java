@@ -7,16 +7,13 @@ import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.At;
 import org.jetbrains.annotations.NotNull;
-import plugin.constant.AIConstant;
 import plugin.constant.ChatConstant;
 import plugin.constant.ConfigConstant;
 import plugin.utils.AIUtil;
 import plugin.utils.ConfigUtil;
 
 import java.io.IOException;
-import java.util.HashMap;
 
-import static plugin.utils.ConfigUtil.getConfig;
 import static plugin.utils.ConfigUtil.logger;
 
 /**
@@ -34,7 +31,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
     public void onGroupMessageEvent(GroupMessageEvent event) {
         String msg = event.getMessage().contentToString();
         String primaryContent = msg.split(ChatConstant.BLANK)[1];
-        if (!primaryContent.contains(ChatConstant.BLANK)) {
+        if (!primaryContent.contains(ChatConstant.SPLIT)) {
             String response;
             response = switch (primaryContent) {
                 case "clearAll" -> AIUtil.clearAll();
@@ -46,8 +43,8 @@ public class OwnerMessageListener extends SimpleListenerHost {
             return;
         }
 
-        String command = primaryContent.split(ChatConstant.BLANK)[0];
-        String arguments = primaryContent.split(ChatConstant.BLANK)[1];
+        String command = primaryContent.split(ConfigConstant.CUSTOM_SPLIT)[0];
+        String arguments = primaryContent.substring(primaryContent.indexOf(ChatConstant.SPLIT)+1);
         long id = event.getSender().getId();
         String response;
         try {
@@ -61,11 +58,12 @@ public class OwnerMessageListener extends SimpleListenerHost {
 
     @EventHandler
     public void onFriendMessageEvent(FriendMessageEvent event) throws IOException {
+        String primaryContent = event.getMessage().contentToString().split(ChatConstant.BLANK)[1];
         String command;
         String arguments;
         try {
-            command = event.getMessage().contentToString().split(ChatConstant.BLANK)[0];
-            arguments = event.getMessage().contentToString().split(ChatConstant.BLANK)[1];
+            command = primaryContent.split(ConfigConstant.CUSTOM_SPLIT)[0];
+            arguments = primaryContent.substring(primaryContent.indexOf(ConfigConstant.CUSTOM_SPLIT)+1);
         } catch (ArrayIndexOutOfBoundsException e) {
             event.getFriend().sendMessage("操作失败，缺少参数");
             return;
@@ -90,7 +88,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
                     String customContent = arguments.split(ConfigConstant.CUSTOM_SPLIT)[2];
                     yield ConfigUtil.addCustom(instruction, customModel, customContent);
                 } else {
-                    yield "格式不正确! 参数格式如下: \r\n指令|模型名称|预设\r\n例: \r\n/example|glm-4-flash|你是...\r\n注：如果不需要预设，可以将预设写为null";
+                    yield "格式不正确! 参数格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|模型名称|预设\r\n例: \r\n"+ChatConstant.SPLIT+"/example|glm-4-flash|你是...\r\n注：如果不需要预设，可以将预设写为null";
                 }
             }
             case "切换模型" -> {
@@ -99,7 +97,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
                     String modelName = arguments.split(ConfigConstant.CUSTOM_SPLIT)[1];
                     yield ConfigUtil.customModelChange(instruction, modelName);
                 } else {
-                    yield "格式不正确! 参数格式如下: \r\n指令|指令对应模型";
+                    yield "格式不正确! 参数格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|指令对应模型";
                 }
             }
             case "更改预设" -> {
@@ -108,7 +106,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
                     String customContent = arguments.split(ConfigConstant.CUSTOM_SPLIT)[1];
                     yield ConfigUtil.customContentChange(instruction, customContent);
                 } else {
-                    yield "格式不正确! 参数格式如下: \r\n指令|指令对应预设";
+                    yield "格式不正确! 参数格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|指令对应预设";
                 }
             }
             case "删除预设" -> ConfigUtil.removeCustom(arguments);

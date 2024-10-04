@@ -126,6 +126,13 @@ src/test/kotlin/RunTerminal.kt
 /data
 /plugins
 /bots
+/gradle
+/lib
+/logs
+/plugin-libraries
+/plugin-shared-libraries
+overflow.json
 
 # Local Test Launch Point working directory
 /debug-sandbox
+

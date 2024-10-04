@@ -47,7 +47,16 @@ public class UserCustomLatestTime {
         this.latestTime = latestTime;
     }
 
+    @Override
     public String toString() {
         return "UserCustomLatestTime{chatCommand = " + chatCommand + ", latestTime = " + latestTime + "}";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof UserCustomLatestTime other) {
+            return other.getChatCommand().equals(this.chatCommand);
+        }
+        return super.equals(obj);
     }
 }

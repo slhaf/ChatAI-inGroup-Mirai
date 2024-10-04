@@ -25,8 +25,7 @@ public class GroupMessageListener extends SimpleListenerHost {
 
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
-        super.handleException(context, exception);
-        logger.error(exception.getMessage());
+        logger.warning(exception);
     }
 
     /**
@@ -67,11 +66,12 @@ public class GroupMessageListener extends SimpleListenerHost {
             //默认对话
             content = content.substring((ChatConstant.DEFAULT_MESSAGE_START + event.getBot().getId()).length());
             method = MethodsConstant.NORMAL;
-        } else if (config.getCustomCommands().containsKey(content.split(ChatConstant.BLANK)[0])) {
+        } else if (config.getCustomCommands().containsKey(content.split(ChatConstant.BLANK)[0]+ChatConstant.BLANK)) {
             //预设对话
-            content = content.split(ChatConstant.BLANK)[1];
+            String[] split = content.split(ChatConstant.BLANK);
+            chatCommand = split[0] + ChatConstant.BLANK;
             method = MethodsConstant.CUSTOM;
-            chatCommand = content.split(ChatConstant.BLANK)[0];
+            content = split[1];
         }
         //消息内容处理
         if (content.isBlank()) {

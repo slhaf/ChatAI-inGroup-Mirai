@@ -1,9 +1,9 @@
 package plugin.utils;
 
 import cn.hutool.core.bean.BeanUtil;
-import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.utils.LoggerAdapters;
 import net.mamoe.mirai.utils.MiraiLogger;
+import org.slf4j.Logger;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import plugin.constant.ChatConstant;
@@ -19,12 +19,12 @@ import java.util.LinkedHashMap;
 /**
  * @author SLHAF
  */
-@Slf4j
 public class ConfigUtil {
     private static final String CONFIG_PATH = "./config/ChatAIinGroup/config.yaml";
     private static final Yaml yaml;
     private static Config config;
-    public static MiraiLogger logger = LoggerAdapters.asMiraiLogger(log);
+    private static final Logger log = org. slf4j. LoggerFactory. getLogger("ChatAIinGroup");
+    public static MiraiLogger logger = LoggerAdapters.asMiraiLogger(log);;
 
     private ConfigUtil() {
     }
@@ -88,7 +88,7 @@ public class ConfigUtil {
     public static String customModelChange(String instruction, String customModel) throws IOException {
         HashMap<String, String> customCommands = config.getCustomCommands();
         if (!customCommands.containsKey(instruction)) {
-            return "该指令不存在!";
+            return "该预设不存在!";
         }
         String customContent = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[1];
         customCommands.put(instruction, customModel + "|" + customContent);

@@ -18,14 +18,24 @@ dependencies{
     implementation ("junit:junit:4.13.2")
     implementation ("org.apache.logging.log4j:log4j-core:2.23.1")
     implementation ("org.apache.logging.log4j:log4j-api:2.23.1")
+    implementation("top.mrxiaom.mirai:overflow-core:0.9.9.515-f8d867b-SNAPSHOT")
+
 
 }
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
     mavenCentral()
 }
 
 mirai {
+    noTestCore = true
+    setupConsoleTestRuntime {
+        // 移除 mirai-core 依赖
+        classpath = classpath.filter {
+            !it.nameWithoutExtension.startsWith("mirai-core-jvm")
+        }
+    }
     jvmTarget = JavaVersion.VERSION_17
 }
