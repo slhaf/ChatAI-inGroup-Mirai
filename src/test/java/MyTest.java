@@ -70,7 +70,7 @@ public class MyTest {
         HttpPost httpPost = new HttpPost("https://open.bigmodel.cn/api/paas/v4/assistant");
         httpPost.setHeaders(new Header[]{
                 new BasicHeader("content-type", "application/json"),
-                new BasicHeader("authorization", "abce8567e434a0e4b987c34763c23c73.NCwRwbrkW9Mi6t63")
+                new BasicHeader("authorization", "")
         });
 
         JSONObject jsonObject = new JSONObject();
