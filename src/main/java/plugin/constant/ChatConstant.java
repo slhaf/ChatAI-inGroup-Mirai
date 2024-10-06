@@ -42,4 +42,5 @@ public class ChatConstant {
      */
     public static final String CURRENT_MODEL = "当前模型";
     public static final String SPLIT = "|";
+    public static final String HELP = "/chatHelp";
 }

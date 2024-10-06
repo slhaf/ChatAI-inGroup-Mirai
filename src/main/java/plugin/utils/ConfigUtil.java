@@ -61,9 +61,8 @@ public class ConfigUtil {
             blacklist.add(987654321L);
             config.setBlacklist(blacklist);
             LinkedHashMap<String, String> commands = new LinkedHashMap<>();
-            commands.put("default", "null");
+            commands.put("default ", "null");
             commands.put("/c ", "glm-4-flash|你是一位智能编程助手，你会为用户回答关于编程、代码、计算机方面的任何问题，并提供格式规范、可以执行、准确安全的代码，并在必要时提供详细的解释。 请用中文回答。");
-            commands.put("/example ", "模型名称|预设内容");
             config.setCustomCommands(commands);
             dump();
             logger.warning("配置文件创建成功，请关闭后进行配置");
@@ -87,13 +86,15 @@ public class ConfigUtil {
 
     public static String customModelChange(String instruction, String customModel) throws IOException {
         HashMap<String, String> customCommands = config.getCustomCommands();
-        if (!customCommands.containsKey(instruction)) {
-            return "该预设不存在!";
+        synchronized (customCommands) {
+            if (!customCommands.containsKey(instruction)) {
+                return "该预设不存在!";
+            }
+            String customContent = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[1];
+            customCommands.put(instruction, customModel + "|" + customContent);
+            dump();
+            return "模型切换成功: [" + instruction + "->" + customCommands.get(instruction) + "]";
         }
-        String customContent = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[1];
-        customCommands.put(instruction, customModel + "|" + customContent);
-        dump();
-        return "模型切换成功: [" + instruction + "->" + customCommands.get(instruction) + "]";
     }
 
     private static void dump() throws IOException {
@@ -132,13 +133,15 @@ public class ConfigUtil {
      */
     public static String addCustom(String instruction, String customModel, String customContent) throws IOException {
         HashMap<String, String> customCommands = config.getCustomCommands();
-        if (customCommands.containsKey(instruction)) {
-            return "已存在当前指令! \r\n[" + instruction + "->" + customCommands.get(instruction) + "]";
+        synchronized (customCommands) {
+            if (customCommands.containsKey(instruction)) {
+                return "已存在当前指令! \r\n[" + instruction + "->" + customCommands.get(instruction) + "]";
+            }
+            String content = customModel + "|" + customContent;
+            customCommands.put(instruction, content);
+            dump();
+            return "预设添加完毕! \r\n[" + instruction + "->" + content + "]";
         }
-        String content = customModel + "|" + customContent;
-        customCommands.put(instruction, content);
-        dump();
-        return "预设添加完毕! \r\n[" + instruction + "->" + content + "]";
     }
 
     /**
@@ -150,23 +153,27 @@ public class ConfigUtil {
      */
     public static String customContentChange(String instruction, String customContent) throws IOException {
         HashMap<String, String> customCommands = config.getCustomCommands();
-        if (!customCommands.containsKey(instruction)) {
-            return "该指令不存在!";
+        synchronized (customCommands) {
+            if (!customCommands.containsKey(instruction)) {
+                return "该指令不存在!";
+            }
+            String modelName = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[0];
+            customCommands.put(instruction, modelName + "|" + customContent);
+            dump();
+            return "预设更改成功! \r\n[" + instruction + "->" + customCommands.get(instruction) + "]";
         }
-        String modelName = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[0];
-        customCommands.put(instruction, modelName + "|" + customContent);
-        dump();
-        return "预设更改成功! \r\n[" + instruction + "->" + customCommands.get(instruction) + "]";
     }
 
     public static String removeCustom(String arguments) throws IOException {
         HashMap<String, String> customCommands = getConfig().getCustomCommands();
-        if (!customCommands.containsKey(arguments + ChatConstant.BLANK)) {
-            return "该预设不存在";
+        synchronized (customCommands) {
+            if (!customCommands.containsKey(arguments + ChatConstant.BLANK)) {
+                return "该预设不存在";
+            }
+            String content = customCommands.get(arguments + ChatConstant.BLANK);
+            customCommands.remove(arguments + ChatConstant.BLANK);
+            dump();
+            return "删除预设[" + arguments + "->" + content + "]成功";
         }
-        String content = customCommands.get(arguments + ChatConstant.BLANK);
-        customCommands.remove(arguments + ChatConstant.BLANK);
-        dump();
-        return "删除预设[" + arguments + "->" + content + "]成功";
     }
 }

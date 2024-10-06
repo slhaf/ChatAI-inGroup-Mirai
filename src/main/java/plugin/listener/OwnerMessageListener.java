@@ -88,7 +88,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
                     String customContent = arguments.split(ConfigConstant.CUSTOM_SPLIT)[2];
                     yield ConfigUtil.addCustom(instruction, customModel, customContent);
                 } else {
-                    yield "格式不正确! 参数格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|模型名称|预设\r\n例: \r\n"+ChatConstant.SPLIT+"/example|glm-4-flash|你是...\r\n注：如果不需要预设，可以将预设写为null";
+                    yield "格式不正确! 格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|模型名称|预设\r\n例: \r\n"+ChatConstant.SPLIT+"/example|glm-4-flash|你是...\r\n注：如果不需要预设，可以将预设写为null";
                 }
             }
             case "切换模型" -> {
@@ -97,7 +97,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
                     String modelName = arguments.split(ConfigConstant.CUSTOM_SPLIT)[1];
                     yield ConfigUtil.customModelChange(instruction, modelName);
                 } else {
-                    yield "格式不正确! 参数格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|指令对应模型";
+                    yield "格式不正确! 格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|指令对应模型";
                 }
             }
             case "更改预设" -> {
@@ -106,7 +106,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
                     String customContent = arguments.split(ConfigConstant.CUSTOM_SPLIT)[1];
                     yield ConfigUtil.customContentChange(instruction, customContent);
                 } else {
-                    yield "格式不正确! 参数格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|指令对应预设";
+                    yield "格式不正确! 格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|指令对应预设";
                 }
             }
             case "删除预设" -> ConfigUtil.removeCustom(arguments);

@@ -5,6 +5,7 @@ import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.event.events.MessageEvent;
 import plugin.constant.ChatConstant;
 import plugin.listener.FriendMessageListener;
 import plugin.listener.GroupMessageListener;
@@ -15,6 +16,7 @@ import plugin.utils.ConfigUtil;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 
 /**
@@ -71,7 +73,7 @@ public final class App extends JavaPlugin {
                 .filter(event -> {
                     String msg = event.getMessage().contentToString();
                     String sender = String.valueOf(event.getFriend().getId());
-                    return !(msg.startsWith(ChatConstant.SET)&&sender.equals(owner));
+                    return !(msg.startsWith(ChatConstant.SET) && sender.equals(owner)) && !msg.equals(ChatConstant.HELP);
                 })
                 .registerListenerHost(new FriendMessageListener());
 
@@ -82,6 +84,42 @@ public final class App extends JavaPlugin {
                     String sender = String.valueOf(event.getFriend().getId());
                     return msg.startsWith(ChatConstant.SET) && sender.equals(owner);
                 }).registerListenerHost(new OwnerMessageListener());
+
+        //帮助监听
+        GlobalEventChannel.INSTANCE
+                .filterIsInstance(MessageEvent.class)
+                .filter(event -> event.getMessage().contentToString().equals(ChatConstant.HELP))
+                .subscribeAlways(MessageEvent.class, event -> {
+                    synchronized (customCommands) {
+                        final String[] helpMsg = {"""
+                                ————<群聊命令>————
+                                
+                                @<bot> <content>
+                                /<command> <content>
+                                
+                                例：
+                                @机器人 你好
+                                /c 你好
+                                
+                                ————<控制命令>————
+                                
+                                $ clearAll
+                                $ shutUp
+                                $ speak
+                                $ 添加预设|<预设指令>|<模型名称>|<预设内容>
+                                $ 切换模型|<预设指令>|<模型名称>
+                                $ 更改预设|<预设指令>|<预设内容>
+                                $ 删除预设|<预设指令>
+                                
+                                例：
+                                $ 添加预设|/c|glm-4-flash|你是一只猫娘...
+                                
+                                """};
+                        helpMsg[0] += "————<预设列表>————";
+                        customCommands.forEach((s, s2) -> helpMsg[0] += "\r\n\r\n" + s + "-> \r\n" + s2);
+                        event.getSubject().sendMessage(helpMsg[0]);
+                    }
+                });
 
     }
 
