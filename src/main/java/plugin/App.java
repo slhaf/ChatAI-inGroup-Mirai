@@ -16,7 +16,6 @@ import plugin.utils.ConfigUtil;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 
 /**
@@ -60,28 +59,19 @@ public final class App extends JavaPlugin {
                     return ((msg.startsWith(".") && msg.length() != 1) || msg.startsWith("@" + bot) || customCommands.containsKey(msg.split(" ")[0] + ChatConstant.BLANK)) && !blacklist.contains(groupId);
                 }).registerListenerHost(new GroupMessageListener());
 
-        //所有者监听--群聊
-        GlobalEventChannel.INSTANCE.filterIsInstance(GroupMessageEvent.class)
-                .filter(event -> {
-                    String msg = event.getMessage().contentToString();
-                    String sender = String.valueOf(event.getSender().getId());
-                    return msg.startsWith(ChatConstant.SET) && sender.equals(owner);
-                }).registerListenerHost(new OwnerMessageListener());
-
         //私聊监听器
         GlobalEventChannel.INSTANCE.filterIsInstance(FriendMessageEvent.class)
                 .filter(event -> {
                     String msg = event.getMessage().contentToString();
                     String sender = String.valueOf(event.getFriend().getId());
                     return !(msg.startsWith(ChatConstant.SET) && sender.equals(owner)) && !msg.equals(ChatConstant.HELP);
-                })
-                .registerListenerHost(new FriendMessageListener());
+                }).registerListenerHost(new FriendMessageListener());
 
-        //所有者监听--私聊
-        GlobalEventChannel.INSTANCE.filterIsInstance(FriendMessageEvent.class)
+        //所有者监听
+        GlobalEventChannel.INSTANCE.filterIsInstance(MessageEvent.class)
                 .filter(event -> {
                     String msg = event.getMessage().contentToString();
-                    String sender = String.valueOf(event.getFriend().getId());
+                    String sender = String.valueOf(event.getSender().getId());
                     return msg.startsWith(ChatConstant.SET) && sender.equals(owner);
                 }).registerListenerHost(new OwnerMessageListener());
 
@@ -94,7 +84,7 @@ public final class App extends JavaPlugin {
                         final String[] helpMsg = {"""
                                 ————<群聊命令>————
                                 
-                                @<bot> <content>
+                                @<bot> <content> (仅限群聊)
                                 /<command> <content>
                                 
                                 例：
@@ -103,10 +93,10 @@ public final class App extends JavaPlugin {
                                 
                                 ————<控制命令>————
                                 
-                                $ clearAll
-                                $ shutUp
-                                $ speak
-                                $ 添加预设|<预设指令>|<模型名称>|<预设内容>
+                                $ clearAll (仅限群聊)
+                                $ shutUp (仅限群聊)
+                                $ speak (仅限群聊)
+                                $ 添加预设|<预设指令>|<模型名称/null>|<预设内容>
                                 $ 切换模型|<预设指令>|<模型名称>
                                 $ 更改预设|<预设指令>|<预设内容>
                                 $ 删除预设|<预设指令>

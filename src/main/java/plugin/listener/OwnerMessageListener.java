@@ -1,10 +1,12 @@
 package plugin.listener;
 
 import kotlin.coroutines.CoroutineContext;
+import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.FriendMessageEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.At;
 import org.jetbrains.annotations.NotNull;
 import plugin.constant.ChatConstant;
@@ -28,7 +30,15 @@ public class OwnerMessageListener extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void onGroupMessageEvent(GroupMessageEvent event) {
+    public void messageClassifier(MessageEvent event) throws IOException {
+        if (event.getSubject() instanceof Group) {
+            onGroupMessageEvent((GroupMessageEvent) event);
+        } else {
+            onFriendMessageEvent((FriendMessageEvent) event);
+        }
+    }
+
+    private void onGroupMessageEvent(GroupMessageEvent event) {
         String msg = event.getMessage().contentToString();
         String primaryContent = msg.split(ChatConstant.BLANK)[1];
         if (!primaryContent.contains(ChatConstant.SPLIT)) {
@@ -44,7 +54,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
         }
 
         String command = primaryContent.split(ConfigConstant.CUSTOM_SPLIT)[0];
-        String arguments = primaryContent.substring(primaryContent.indexOf(ChatConstant.SPLIT)+1);
+        String arguments = primaryContent.substring(primaryContent.indexOf(ChatConstant.SPLIT) + 1);
         long id = event.getSender().getId();
         String response;
         try {
@@ -56,14 +66,13 @@ public class OwnerMessageListener extends SimpleListenerHost {
         event.getGroup().sendMessage(new At(id).plus(response));
     }
 
-    @EventHandler
-    public void onFriendMessageEvent(FriendMessageEvent event) throws IOException {
+    private void onFriendMessageEvent(FriendMessageEvent event) throws IOException {
         String primaryContent = event.getMessage().contentToString().split(ChatConstant.BLANK)[1];
         String command;
         String arguments;
         try {
             command = primaryContent.split(ConfigConstant.CUSTOM_SPLIT)[0];
-            arguments = primaryContent.substring(primaryContent.indexOf(ConfigConstant.CUSTOM_SPLIT)+1);
+            arguments = primaryContent.substring(primaryContent.indexOf(ConfigConstant.CUSTOM_SPLIT) + 1);
         } catch (ArrayIndexOutOfBoundsException e) {
             event.getFriend().sendMessage("操作失败，缺少参数");
             return;
@@ -88,7 +97,7 @@ public class OwnerMessageListener extends SimpleListenerHost {
                     String customContent = arguments.split(ConfigConstant.CUSTOM_SPLIT)[2];
                     yield ConfigUtil.addCustom(instruction, customModel, customContent);
                 } else {
-                    yield "格式不正确! 格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|模型名称|预设\r\n例: \r\n"+ChatConstant.SPLIT+"/example|glm-4-flash|你是...\r\n注：如果不需要预设，可以将预设写为null";
+                    yield "格式不正确! 格式如下: \r\n" + ChatConstant.SET + "命令|预设指令|模型名称|预设\r\n例: \r\n" + ChatConstant.SPLIT + "/example|glm-4-flash|你是...\r\n注：如果不需要预设，可以将预设写为null";
                 }
             }
             case "切换模型" -> {

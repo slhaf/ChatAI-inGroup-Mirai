@@ -6,6 +6,7 @@ import net.mamoe.mirai.utils.MiraiLogger;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import plugin.constant.AIConstant;
 import plugin.constant.ChatConstant;
 import plugin.constant.ConfigConstant;
 import plugin.pojo.Config;
@@ -74,6 +75,13 @@ public class ConfigUtil {
             inputStream.close();
             logger.info(config.toString());
             logger.info("读取配置文件完毕");
+            HashMap<String, String> customCommands = config.getCustomCommands();
+            if (!customCommands.containsKey(ConfigConstant.DEFAULT+ChatConstant.BLANK)){
+                logger.warning("未找到default预设!");
+                customCommands.put("default ","null");
+                dump();
+                logger.warning("已自动添加default预设!");
+            }
             Class.forName("plugin.utils.AIUtil");
             Class.forName("plugin.utils.OCRUtil");
         }
@@ -90,10 +98,16 @@ public class ConfigUtil {
             if (!customCommands.containsKey(instruction)) {
                 return "该预设不存在!";
             }
-            String customContent = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[1];
-            customCommands.put(instruction, customModel + "|" + customContent);
-            dump();
-            return "模型切换成功: [" + instruction + "->" + customCommands.get(instruction) + "]";
+            if (ConfigConstant.DEFAULT.equals(instruction)){
+                config.setDefaultModel(customModel);
+                dump();
+                return "模型切换成功: [defaultModel -> "+config.getDefaultModel()+"]";
+            }else {
+                String customContent = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[1];
+                customCommands.put(instruction, customModel + "|" + customContent);
+                dump();
+                return "模型切换成功: [" + instruction + "->" + customCommands.get(instruction) + "]";
+            }
         }
     }
 
@@ -157,8 +171,12 @@ public class ConfigUtil {
             if (!customCommands.containsKey(instruction)) {
                 return "该指令不存在!";
             }
-            String modelName = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[0];
-            customCommands.put(instruction, modelName + "|" + customContent);
+            if (ConfigConstant.DEFAULT.equals(instruction)) {
+                customCommands.put(instruction, customContent);
+            }else {
+                String modelName = customCommands.get(instruction).split(ConfigConstant.CUSTOM_SPLIT)[0];
+                customCommands.put(instruction, modelName + "|" + customContent);
+            }
             dump();
             return "预设更改成功! \r\n[" + instruction + "->" + customCommands.get(instruction) + "]";
         }
@@ -169,6 +187,9 @@ public class ConfigUtil {
         synchronized (customCommands) {
             if (!customCommands.containsKey(arguments + ChatConstant.BLANK)) {
                 return "该预设不存在";
+            }
+            if (ConfigConstant.DEFAULT.equals(arguments)){
+                return "默认配置不可删除!";
             }
             String content = customCommands.get(arguments + ChatConstant.BLANK);
             customCommands.remove(arguments + ChatConstant.BLANK);

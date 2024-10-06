@@ -170,10 +170,21 @@ public class MyTest {
     }
 
     @Test
+    public void textBlockTest(){
+        String str = """
+                aliyun:
+                 123:
+                  111
+                """;
+        System.out.println(str);
+    }
+
+    @Test
     public void terminalTest() throws InterruptedException {
         MiraiConsoleTerminalLoader.INSTANCE.startAsDaemon(new MiraiConsoleImplementationTerminal());
         PluginManager.INSTANCE.loadPlugin(App.INSTANCE);
         PluginManager.INSTANCE.enablePlugin(App.INSTANCE);
         while (true);
     }
+
 }
